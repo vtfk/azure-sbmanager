@@ -1,0 +1,21 @@
+{
+  "name": "azf-util-sbq-manager",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Sherex",
+  "license": "MIT",
+  "dependencies": {
+    "@azure/arm-servicebus": "^3.1.0",
+    "@azure/arm-subscriptions": "^1.0.0",
+    "@azure/ms-rest-azure-js": "^1.3.2",
+    "@azure/ms-rest-js": "^1.8.0",
+    "@azure/ms-rest-nodeauth": "^0.9.1"
+  }
+}
