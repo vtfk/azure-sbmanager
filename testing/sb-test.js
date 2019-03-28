@@ -1,65 +1,101 @@
-require('dotenv').config()
 const auth = require('../lib/authenticate')
 const armServiceBus = require('@azure/arm-servicebus')
-const armResources = require('@azure/arm-resources');
+const armResources = require('@azure/arm-resources')
+const connServiceBus = require('@azure/service-bus')
 
 
-(async () => {
+// https://github.com/Azure/azure-sdk-for-js/blob/master/packages/%40azure/servicebus/data-plane/examples/javascript/gettingStarted/browseMessages.js
 
-  const authRes = await auth()
-  const creds = authRes.credentials
-  const subscriptionId = authRes.subscriptions[0].id
 
-  const resourceMgmClient = new armResources.ResourceManagementClient(creds, subscriptionId)
-  // Get all resourcegroups
-  const resourceGroups = await resourceMgmClient.resourceGroups.list()
 
-  // Get all servicebus namespaces
-  const resources = await resourceMgmClient.resources.list()
-  const sbNamespaces = resources
-    .filter(resource => resource.type === 'Microsoft.ServiceBus/namespaces')
-
-  console.log('##########################')
-  console.log('Resourcegroups:')
-  console.log(resourceGroups.map(rg => rg.name))
-  console.log('##########################')
-  console.log('SB Namespaces:')
-  console.log(sbNamespaces.map(ns => ns.name))
-  console.log('##########################')
-
-  const sbMgmClient = new armServiceBus.ServiceBusManagementClient(creds, subscriptionId);
-
-  let allQueues = {}
-
-  // TODO: Restructure to send over RG and NS info
-  // TODO: Support filtering for RG and NS
-
-  for (let i = 0; i < resourceGroups.length; i++) {
-    const rGroup = resourceGroups[i];
-    console.log('| R | ' + rGroup.name)
-    allQueues[rGroup.name] = {}
-
-    let namespaces = await resourceMgmClient.resources.listByResourceGroup(rGroup.name)
-    namespaces = namespaces.filter(
-      resource => resource.type === 'Microsoft.ServiceBus/namespaces'
-    )
-
-    for (let j = 0; j < namespaces.length; j++) {
-      const namespace = namespaces[j];
-      console.log('| N |-- ' + namespace.name)
-
-      let queues = await sbMgmClient.queues.listByNamespace(rGroup.name, namespace.name)
-      queues.map(queue => {console.log('| Q |---- ' + queue.name)})
-      allQueues[rGroup.name][namespace.name] = queues
-      
-    }
-
+function getResourceGroupFromId(idString) {
+  const resGroupRegEx = /resourceGroups\/(?<resGroup>[^\/]*)/
+  try {
+    return resGroupRegEx.exec(idString).groups.resGroup
+  } catch (error) {
+    throw error
   }
+}
 
-  // const queues = await sbMgmClient.queues.listByNamespace('tfkdevtest', 'tfkdevtest')
 
+;(async () => {
+  // TODO: Subscription selection in UI (send over all subscriptions)
+  const {credentials, subscriptions} = await auth()
+  let subscriptionId = subscriptions[1].id
 
-  console.log(allQueues)
+  const resourceMgmClient = new armResources.ResourceManagementClient(
+    credentials,
+    subscriptionId
+  )
+  const sbMgmClient = new armServiceBus.ServiceBusManagementClient(
+    credentials,
+    subscriptionId
+  )
+
+  
+  // Get all resourcegroups and all servicebus namespaces
+  let [resGroups, namespaces] = await Promise.all([
+    resourceMgmClient.resourceGroups.list(),
+    resourceMgmClient.resources.list()
+  ])
+  namespaces = namespaces.filter(
+    resource => resource.type === 'Microsoft.ServiceBus/namespaces'
+  )
+
+  let parsedData = {}
+  // Adding resourcegroups
+  parsedData.resourceGroups = resGroups
+  
+  // Adding namespaces with resgroup reference
+  parsedData.namespaces = namespaces.map(namespace => ({
+    resourceGroupName: getResourceGroupFromId(namespace.id),
+    ...namespace
+  }))
+
+  // Adding queues with resgroup and namespace reference
+  parsedData.queues = []
+  await Promise.all(parsedData.namespaces.map( async namespace => {
+    let queues = await sbMgmClient.queues.listByNamespace(
+      namespace.resourceGroupName,
+      namespace.name
+    )
+    // Push each queue into parsedData.queues
+    queues.map(queue => {
+      parsedData.queues.push({
+        resourceGroupName: namespace.resourceGroupName,
+        namespaceName: namespace.name,
+        ...queue
+      })
+    })
+  }))
+  
+  console.log("###################")
+  console.log(parsedData)
+
+  const queueMess = await sbMgmClient.queues.get('tfkdevtest', 'tfkdevtest', 'sherexdevqueue')
+
+  console.log(queueMess)
+  //*/
 })().catch(err => {
   console.error(err)
 })
+
+// Data structure
+let structure = [
+  resourcegsroups = {
+    name: "tfkdevtest",
+    namespaces: [
+      {
+        name: "tfkdevtest",
+        queues: [
+          {
+            name: "sherexdevqueue",
+            data: {}
+          }
+        ],
+        data: {}
+      }
+    ],
+    data: {}
+  }
+]
