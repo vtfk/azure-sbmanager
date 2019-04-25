@@ -91,3 +91,6 @@ out
 
 # Mac filesystem metadata
 .DS_Store
+
+# VSCode IDE Files
+.vscode
