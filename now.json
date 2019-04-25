@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "name": "SBManager",
+  "builds": [
+    { "src": "www/package.json", "use": "@now/static-build" },
+    { "src": "api/*.js", "use": "@now/node" }
+  ],
+  "routes": [
+    { "src": "/api", "dest": "/api" },
+    { "src": "^/js/(.*)", "dest": "/www/js/$1" },
+    { "src": "^/css/(.*)", "dest": "/www/css/$1" },
+    { "src": "^/img/(.*)", "dest": "/www/img/$1" },
+    { "src": ".*", "dest": "/www/index.html" }
+  ]
+}
