@@ -2,14 +2,14 @@ const config = require('../config')
 const armServiceBus = require('@azure/arm-servicebus')
 const idStringParser = require('./get-resourcenames-from-id')
 
-module.exports = async function getOrCreateConnString(credentials, subscriptionId, queueIds) {
+module.exports = async function getOrCreateConnString(credentials, subscriptionId, namespaceIds) {
   try {
 
     if (!credentials) {throw Error('Parameter credentials was not passed')}
     if (!subscriptionId) {throw Error('Parameter subscriptionId was not passed')}
-    if (!queueIds) {throw Error('Array of queueIds was not passed')}
+    if (!namespaceIds) {throw Error('Array of namespaceIds was not passed')}
 
-    queueIds = Array.isArray(queueIds) ? queueIds : [queueIds]
+    namespaceIds = Array.isArray(namespaceIds) ? namespaceIds : [namespaceIds]
 
     const sbMgmClient = new armServiceBus.ServiceBusManagementClient(
       credentials,
@@ -18,11 +18,11 @@ module.exports = async function getOrCreateConnString(credentials, subscriptionI
 
     // TODO: Handle invidual errors
     let connStrings = await Promise.all(
-      queueIds.map(async (queueId, i) => {
+      namespaceIds.map(async (namespaceId, i) => {
         console.log('### Starting: ' + i)
         let connString
 
-        let queue = idStringParser(queueId)
+        let queue = idStringParser(namespaceId)
 
         if (!queue.resGroup) throw Error('ID String did not contain resourceGroup.')
         if (!queue.namespace) throw Error('ID String did not contain namespace.')
@@ -40,7 +40,7 @@ module.exports = async function getOrCreateConnString(credentials, subscriptionI
 
         } finally {
           console.log('### Stopped: ' + i)
-          return connString
+          return connString.primaryConnectionString
         }
       })
     )

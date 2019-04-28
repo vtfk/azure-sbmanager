@@ -1,6 +1,7 @@
 const getResourcegroups = require('./get-resourcegroups')
 const getNamespaces = require('./get-namespaces')
 const getQueues = require('./get-queues')
+const getMessages = require('./get-messages')
 
 /**
  * Returns functions to list resourcegroups, namespaces and queues.
@@ -16,7 +17,8 @@ module.exports = async (creds, subIdDefault) => {
     return {
       getResourcegroups: (subscriptionId = subIdDefault) => getResourcegroups(creds, subscriptionId),
       getNamespaces: (subscriptionId = subIdDefault) => getNamespaces(creds, subscriptionId),
-      getQueues: (subscriptionId = subIdDefault, namespaces) => getQueues(creds, subscriptionId, namespaces)
+      getQueues: (subscriptionId = subIdDefault, namespaces) => getQueues(creds, subscriptionId, namespaces),
+      getMessages: (subscriptionId = subIdDefault, idString, getStandardQueue) => getMessages(creds, subscriptionId, idString, getStandardQueue)
     }
     
   } catch (error) {
