@@ -14,10 +14,7 @@ module.exports = async function getNamespaces(credentials, subscriptionId) {
     namespaces = namespaces.filter(
       resource => resource.type === 'Microsoft.ServiceBus/namespaces'
     )
-    return namespaces.map(namespace => ({
-      resourceGroupName: idStringParser(namespace.id).resGroup,
-      ...namespace
-    }))
+    return namespaces
   } catch (error) {
     throw error
   }
