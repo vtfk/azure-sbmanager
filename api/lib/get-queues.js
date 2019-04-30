@@ -1,5 +1,6 @@
 const armServiceBus = require('@azure/arm-servicebus')
 const idStringParser = require('./get-resourcenames-from-id')
+const getNamespaces = require('./get-namespaces')
 
 // TODO: Add support for array of namespace names only (if string {get namespaces; filter for name})
 module.exports = async function getQueues(credentials, subscriptionId, namespaces) {
@@ -7,7 +8,10 @@ module.exports = async function getQueues(credentials, subscriptionId, namespace
 
     if (!credentials) {throw Error('Parameter credentials was not passed')}
     if (!subscriptionId) {throw Error('Parameter subscriptionId was not passed')}
-    if (!namespaces) {throw Error('Array of namespaces was not passed')}
+    
+    if (!namespaces) {
+      namespaces = await getNamespaces(credentials, subscriptionId)
+    }
 
     const sbMgmClient = new armServiceBus.ServiceBusManagementClient(
       credentials,
@@ -23,11 +27,7 @@ module.exports = async function getQueues(credentials, subscriptionId, namespace
       )
       
       queues.map(queue => {
-        allQueues.push({
-          resourceGroupName: idStringParser(queue.id).resGroup,
-          namespaceName: idStringParser(queue.id).namespace,
-          ...queue
-        })
+        allQueues.push(queue)
       })
     }))
     return allQueues
