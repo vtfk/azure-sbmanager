@@ -24,15 +24,11 @@ module.exports = async function getQueueMessages(credentials, subscriptionId, id
     } else {
       queueName = Namespace.getDeadLetterQueuePath(id.queue)
     }
-    console.log('###')
-    console.log(queueName)
-    console.log(`${id.namespace}.servicebus.windows.net/`)
-    console.log('###')
 
     const receiver = qClient.createQueueClient(queueName).getReceiver()
-    const messages = receiver.receiveBatch(1)
+    const messages = await receiver.receiveBatch(1)
 
-    qClient.close()
+    await qClient.close()
 
     return messages
     
