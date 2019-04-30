@@ -8,6 +8,12 @@
   </div>
 </template>
 
+<script>
+import { AuthenticationContext } from 'vue-adal' // This will be populated with a valid context after initialization
+const profile = AuthenticationContext.user.profile
+console.log(profile)
+</script>
+
 <style>
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
