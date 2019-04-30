@@ -19,7 +19,6 @@ module.exports = async function getOrCreateConnString(credentials, subscriptionI
     // TODO: Handle invidual errors
     let connStrings = await Promise.all(
       namespaceIds.map(async (namespaceId, i) => {
-        console.log('### Starting: ' + i)
         let connString
 
         let queue = idStringParser(namespaceId)
@@ -33,13 +32,11 @@ module.exports = async function getOrCreateConnString(credentials, subscriptionI
           connString = await sbMgmClient.namespaces.listKeys(queue.resGroup, queue.namespace, config.SAS_KEY_NAME)
 
         } catch (error) {
-          console.log('### Creating keys: ' + i)
           await sbMgmClient.namespaces.createOrUpdateAuthorizationRule(queue.resGroup, queue.namespace, config.SAS_KEY_NAME, {rights: ['Listen', 'Send', 'Manage']})
 
           connString = await sbMgmClient.namespaces.listKeys(queue.resGroup, queue.namespace, config.SAS_KEY_NAME)
 
         } finally {
-          console.log('### Stopped: ' + i)
           return connString.primaryConnectionString
         }
       })
